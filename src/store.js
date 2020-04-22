@@ -12,6 +12,13 @@ const bookmarks = [
         url: "https://princess.disney.com/cinderellas-story",
         description: "This is a Cinderella story.",
         rating: 4
+    },
+    {
+        id: 3,
+        title: "Moana",
+        url: "https://princess.disney.com/moana-story",
+        description: "This is a Moana story.",
+        rating: 3
     }
 ]
 
