@@ -1,5 +1,5 @@
 const express = require('express');
-const { bookmarks } = require('../store');
+const path = require('path');
 const logger = require('../logger');
 const BookmarksService = require('../bookmarks-service');
 const xss = require('xss');
@@ -18,9 +18,8 @@ function sanitizeContent(article){
     }
 }
 
-
 bookmarksRouter
-    .route('/bookmarks')
+    .route('/api/bookmarks')
     .get((req,res,next) => {
         const knexInstance = req.app.get('db');
         BookmarksService.getAllBookmarks(knexInstance)
@@ -51,7 +50,7 @@ bookmarksRouter
 
                 res
                     .status(201)
-                    .location(`/bookmarks/${AddedBookmark.id}`)
+                    .location(path.posix.join(req.originalUrl , `/${AddedBookmark.id}`))
                     .json(sanitizeContent(AddedBookmark))
             })
             .catch(next)
@@ -59,7 +58,7 @@ bookmarksRouter
     })
 
 bookmarksRouter
-    .route('/bookmarks/:id')
+    .route('/api/bookmarks/:id')
     .all((req,res,next) => {
         const { id } = req.params;
         const knexInstance = req.app.get('db'); 
@@ -83,6 +82,23 @@ bookmarksRouter
 
         BookmarksService.deleteBookmark(knexInstance,id)
             .then(response => {
+                res.status(204).end()
+            })
+            .catch(next)
+    })
+    .patch( parseBody, (req,res,next) => {
+        const knexInstance = req.app.get('db')
+        const { id } = req.params
+        const {title, url, description, rating} = req.body
+        const updatedBookmarkContent = {title,url,description,rating}
+
+        const numberOfValues = Object.values(updatedBookmarkContent).filter(Boolean).length
+        if (numberOfValues === 0) {
+            return res.status(400).send('Bad Request')
+        }
+
+        BookmarksService.updateBookmark(knexInstance,id,updatedBookmarkContent)
+            .then(updateRes => {
                 res.status(204).end()
             })
             .catch(next)
